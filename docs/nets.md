@@ -7,7 +7,7 @@ names are in [datasets.md](datasets.md); the architecture and file format in
 [nnue.md](nnue.md); the training pipeline in [training.md](training.md).
 
 Each net's own record (`training.json`, the losses, the validation curve, the
-split, the log) is in `s3://jwall-engineering-rusty-chess-nnue/data/nets/<net id>/`.
+split, the log) is in `s3://jwall-engineering-braveheart-nnue/data/nets/<net id>/`.
 Net ids are `<name>-l<λ×100>-r<Train run id>`. Each net's architecture is
 drawn in [nnue-architectures/](nnue-architectures/README.md), one snapshot
 per net id; the CI check there requires every net in the summary below to

@@ -124,9 +124,9 @@ jobs:
       max-parallel: 1 # the G and VT on-demand quota (5 vCPUs) fits one g6.xlarge
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.nets) }}
-    uses: jwallace145/jwall-engineering-infra/.github/workflows/remote-task.yml@v0.19.0
+    uses: jwallace145/jwall-engineering-infra/.github/workflows/remote-task.yml@v0.28.0
     with:
-      project: rusty-chess
+      project: braveheart
       profile: gpu
       script: ci/train-task.sh
       args: ${{ matrix.args }}

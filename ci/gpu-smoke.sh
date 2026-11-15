@@ -10,7 +10,7 @@ set -euo pipefail
 : "${OUT_DIR:?OUT_DIR is not set}"
 scratch="${SCRATCH_DIR:-/tmp}/gpu-smoke"
 mkdir -p "$scratch"
-bucket=s3://jwall-engineering-rusty-chess-nnue
+bucket=s3://jwall-engineering-braveheart-nnue
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 summary="$OUT_DIR/summary.txt"
 : > "$summary"
