@@ -10,12 +10,12 @@ every snapshot links back to.
 ## Reading a diagram
 
 Every diagram draws the forward pass top to bottom, in the order
-[nnue.md](../nnue.md) describes it, one colour per stage:
+[nnue.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md) describes it, one colour per stage:
 
 | Colour | Stage | What it is |
 |:--|:--|:--|
 | Blue | Board | bullet's `Chess768` input: one feature per colour, piece kind and square, 768 per perspective, each perspective seeing the board from its own side |
-| Violet | Own-king view | with king buckets, each perspective picks one of K slices of the input weights by the bucket its *own* king stands in, mirrored left to right when that king is on files e–h ([king-buckets.md](../king-buckets.md)). Absent on single-view nets |
+| Violet | Own-king view | with king buckets, each perspective picks one of K slices of the input weights by the bucket its *own* king stands in, mirrored left to right when that king is on files e–h ([king-buckets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/king-buckets.md)). Absent on single-view nets |
 | Cyan | Feature transformer | two accumulators, one per perspective, both reading **the same** `768 × K → H` weights; `H` is the hidden width per perspective |
 | Green | SCReLU | `clamp(x, 0, 255)²` on every pre-activation |
 | Amber | Output | the `2H` activations, side to move first, into one head of `2H → 1`. With output buckets the net carries a bank of B heads and the position's piece count picks **one**; the others are not evaluated |

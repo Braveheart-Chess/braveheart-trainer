@@ -1,11 +1,11 @@
 # Training NNUE nets
 
 The nets are trained with [`bullet`](https://github.com/jw1912/bullet) on the
-self-play data in [datagen.md](datagen.md), which must have passed its audit
-([datagen-runbook.md](datagen-runbook.md)) first. The trainer lives in
+self-play data in [datagen.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datagen.md), which must have passed its audit
+([datagen-runbook.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datagen-runbook.md)) first. The trainer lives in
 `trainer/`, a Cargo project of its own: bullet's GPU backends (CUDA, or Metal
 on a Mac) never touch the engine's build. The network it trains is the one
-[nnue.md](nnue.md) describes and the engine evaluates.
+[nnue.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md) describes and the engine evaluates.
 
 ## The pipeline
 
@@ -51,7 +51,7 @@ shards in S3 ──▶ prepare ──▶ train.data, val.data ──▶ train �
      it on, and `training.json` records it (`output_buckets`). bullet keeps
      the output layer column-major, so `raw.bin` interleaves the buckets'
      weights; `net.nnue` is saved transposed, each bucket's 2H weights
-     together, the engine's order ([nnue.md](nnue.md#output-buckets)).
+     together, the engine's order ([nnue.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md#output-buckets)).
    - **King buckets:** `--king-buckets 4` indexes each side's inputs by its
      own king's bucket, mirrored with the king on files e–h (bullet's
      `ChessBucketsMirrored` with the engine's `KING_BUCKET_LAYOUT`; a test
@@ -62,7 +62,7 @@ shards in S3 ──▶ prepare ──▶ train.data, val.data ──▶ train �
      format: `raw.bin` ends with it (the scorer adds it back) and so does
      `quantised.bin`, which `train` cuts to the engine's size for `net.nnue`.
      The `Train` workflow's `king-buckets` input passes it on; `training.json`
-     records `king_buckets`. Design: [king-buckets.md](king-buckets.md).
+     records `king_buckets`. Design: [king-buckets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/king-buckets.md).
    - **Scoring:** the checkpoint scorer and `validate` infer the width and the
      buckets from the file's size, so they score nets of any width, in either
      order. A quantised file whose size two shapes fit within the padding
@@ -118,7 +118,7 @@ shards in S3 ──▶ prepare ──▶ train.data, val.data ──▶ train �
    - **Noise:** 4M of generation 0's held-out positions put the loss within
      about 3·10⁻⁵ of the full 16.7M. Differences between checkpoints of one
      run are on the same positions, so they are finer than that.
-4. **`nnue-eval --net net.nnue --check eval_check.json`** (in `crates/tools`)
+4. **`nnue-eval --net net.nnue --check eval_check.json`** (in `crates/nnue-eval`)
    - **What it compares:** the engine's evaluation of the check positions,
      through its own loader and `Board::evaluate`, with the trainer's.
    - **It fails when:** any position is off by more than max(50 cp, 5%), or
@@ -150,7 +150,7 @@ gh workflow run Train --ref main -f net-id=net2 -f wdl=0.5 -f superbatches=40 -f
   trained with it (the same split seed puts net 1's validation workers in
   validation again).
 - `labels` trains a generation on a relabelled copy of its positions
-  ([relabel.md](relabel.md)), for example
+  ([relabel.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/relabel.md)), for example
   `-f labels=0=net7-l050-r41363264869-n5000`; the other generations keep their
   original labels. The records are the same and in the same order, so the split
   and the shuffle match a net trained on the originals, and only the scores
@@ -187,7 +187,7 @@ overwritten.
 cd trainer && cargo build --release --features metal
 target/release/braveheart-trainer prepare --shards /path/to/gen=0 --out /tmp/prepared
 target/release/braveheart-trainer train --data /tmp/prepared --net-id net1-l050 --wdl 0.5 --superbatches 40 --out /tmp/net1
-cargo run --release -p braveheart-tools --bin nnue-eval -- --net /tmp/net1/net.nnue --check /tmp/net1/eval_check.json
+cargo run --release --manifest-path ../Cargo.toml --bin nnue-eval -- --net /tmp/net1/net.nnue --check /tmp/net1/eval_check.json
 ```
 
 An M-series GPU trains this network at about 4.7 million positions a second,
@@ -255,15 +255,15 @@ so 40 passes over generation 0 did not overfit visibly.
 Record every net, kept or not, in [nets.md](nets.md): its data and label sets,
 its parameters, its validation curve, its check, and, when tested, its SPRT and
 ladder results. Add its labels to
-[datasets.md](datasets.md#which-labels-each-net-trained-on).
+[datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#which-labels-each-net-trained-on).
 
 
 1. **Load and test the net:** `setoption name EvalFile value net.nnue`, or
    `bench --eval-file`.
 2. **SPRT it against PeSTO.** A first net typically gains 100 Elo or more.
-3. **Run the λ experiment** ([datagen-runbook.md](datagen-runbook.md)) on the
+3. **Run the λ experiment** ([datagen-runbook.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datagen-runbook.md)) on the
    same prepared data, and keep the strongest net.
 4. **Embed the winner** with `include_bytes!` and make it the default
-   ([nnue.md](nnue.md)).
+   ([nnue.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md)).
 5. **Next generation:** generate generation 1 with it (`generation = 1` in
    `datagen.toml`).

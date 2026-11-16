@@ -1,10 +1,17 @@
 # NNUE nets
 
+> **A snapshot until the data move.** Train still runs from the engine
+> repository, and its
+> [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md)
+> is the ledger until the nets move to this repository's bucket. This copy is
+> engine commit `1a25b13`; record nothing here. It is refreshed from the
+> engine's at the data move.
+
 The ledger of every net trained, kept or not: what it was trained on and
 how, what it measured, and how it played. It's the record for deciding what
 to try next, so it keeps the failures too. The positions and labels each net
-names are in [datasets.md](datasets.md); the architecture and file format in
-[nnue.md](nnue.md); the training pipeline in [training.md](training.md).
+names are in [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md); the architecture and file format in
+[nnue.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md); the training pipeline in [training.md](training.md).
 
 Each net's own record (`training.json`, the losses, the validation curve, the
 split, the log) is in `s3://jwall-engineering-braveheart-nnue/data/nets/<net id>/`.
@@ -16,7 +23,7 @@ have one.
 The **Labels** column is the label set a net used for its generations. `O` means
 every generation's original labels; a mix names each part, such as `N7` on
 generations 0–2 and `O` on the rest. The keys, and a per-generation table for
-every net, are in [datasets.md](datasets.md#which-labels-each-net-trained-on).
+every net, are in [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#which-labels-each-net-trained-on).
 
 ## Summary
 
@@ -49,7 +56,7 @@ every net, are in [datasets.md](datasets.md#which-labels-each-net-trained-on).
   with `rusty-chess-trainer validate` to compare them.
 - **The same positions aren't the same held-out data if the labels differ.**
   The `val.data` SHA-256 tells you: losses compare only when it matches
-  ([datasets.md](datasets.md#prepared-training-sets)). The first 14 nets use
+  ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#prepared-training-sets)). The first 14 nets use
   `O`; net7rl012 is the first that doesn't.
 - **Both SPRTs are required to merge, since #184.** The timed leg shows what
   the engine does at a clock, and the fixed-node leg isolates the net's
@@ -140,7 +147,7 @@ rebased onto `v0.50.0`, which has two search changes more (#246, #254), and its
 SPRT was played again before it could merge: the second run is at the end of
 this section. The plan below was recorded on 2026-11-13 at 01:07 MST
 (`2160aea`, 08:07:36 UTC), before the `Train` dispatch (08:07:49), during the
-overnight research session ([research-log.md](research-log.md)), and is
+overnight research session ([research-log.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/research-log.md)), and is
 unchanged.
 
 | | |
@@ -309,8 +316,8 @@ training before the SPRT had run, and nothing recorded the result afterwards
 | Question | Does a seventh generation of data, the largest yet and played by the strongest net, make a stronger net? Every generation so far has, by less each time: +21.9 for +71% data (net 5), +14.5 for +32% (net6), +6.8 for +16% (net7) |
 | The one change from net7rl012 | Generation 6 added: 849,868,621 records under their original labels (net7rl012's own scores at 5,000 nodes), +36% on the 2,348,928,163 of generations 0–5, so 3,198,796,784 records in all |
 | Held the same | Labels for generations 0–5 (`N7` on 0–2, `O` on 3–5), split seed 1, shuffle seed 1, `val_fraction` 0.05, (768 × 4 → 512) × 2 → 8, λ 0.5 and the 80-superbatch schedule. `trainer/` and `ci/train-task.sh` have no change since net7rl012's commit `d25ce3f`; `train.yml` changed only in the `hidden` input's description (#211) |
-| Prepared set | `g0-6·N7(0-2)` ([datasets.md](datasets.md#prepared-training-sets)): 3,198,796,784 records in 128,202 shards from 1,728 workers, training and held-out together. Its held-out workers must contain `g0-5·N7(0-2)`'s 72, as every set's have contained the previous set's, so net7rl012's `val.data` (`ad1f1aa4…f8ef`) is held out for net8 too and scores both nets on identical records |
-| Prerequisite | Generation 6's full audit is a GO ([datasets.md](datasets.md#generation-6-net7rl012)) |
+| Prepared set | `g0-6·N7(0-2)` ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#prepared-training-sets)): 3,198,796,784 records in 128,202 shards from 1,728 workers, training and held-out together. Its held-out workers must contain `g0-5·N7(0-2)`'s 72, as every set's have contained the previous set's, so net7rl012's `val.data` (`ad1f1aa4…f8ef`) is held out for net8 too and scores both nets on identical records |
+| Prerequisite | Generation 6's full audit is a GO ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#generation-6-net7rl012)) |
 | Gate | H1 in both the timed and the fixed-node SPRT against net7rl012, the default, in the engine at the SPRT PR's base (`v0.47.2` or later, with the correction history). Anything else drops the net, unless the owner merges over the check with a stated reason |
 | Expectation | By the record above, about +10 to +15 at fixed nodes and the same at a clock, since the net's size and speed don't change. Less is possible: generation 6's labels are the labeller's own, as were 3–5's, and the labels on 0–2 come from net7, two steps behind |
 | Cost | `train.data` of about 102 GB on the `g6.xlarge`'s 233 GB NVMe scratch (net7rl012's run used `nvme1n1`); the schedule reads the same 8B positions as before, so training time should be near net7rl012's 4,470 s, with a longer prepare (1,124 s for 94,149 shards). About 2 hours and $1.30 on demand, an estimate |
@@ -518,7 +525,7 @@ existed, in #206, and is unchanged.
 | Question | net7rl012 gained from better scores on generations 0–2. Do better scores on generations 3–5 gain too? |
 | The one change from net7rl012 | Generations 3–5 use label set `N7r`, net7rl012's scores at 5,000 nodes, in place of their originals from net4w512, net 5 and net6k4. That's 1,442.3M of 2,348.9M records (61.4%) |
 | Held the same | Positions, results, split, seeds, generations 0–2's labels (`N7`), architecture, λ 0.5 and the schedule. The trainer, `ci/train-task.sh` and the `Train` workflow have no change since net7rl012's commit `d25ce3f` |
-| Prepared set | `g0-5·N7(0-2)·N7r(3-5)` ([datasets.md](datasets.md#prepared-training-sets)). Its records, workers, shards and held-out workers must match `g0-5·N7(0-2)` |
+| Prepared set | `g0-5·N7(0-2)·N7r(3-5)` ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#prepared-training-sets)). Its records, workers, shards and held-out workers must match `g0-5·N7(0-2)` |
 | Prerequisite | `N7r` is complete for generations 3–5 and its audit is recorded (#205) |
 | Gate | H1 in both the timed and the fixed-node SPRT against net7rl012, the default. Anything else drops the net, unless the owner merges over the check with a stated reason |
 | Not tested | Two labellers stay in the data: net7 on generations 0–2 and net7rl012 on 3–5. Relabelling generations 0–2 with net7rl012 would be a separate experiment |
@@ -570,7 +577,7 @@ mixed:
 - **Generations 3–5:** net7rl012345 fits the game results better, by 0.64%. It
   does better on its own labels and about the same on the originals (+0.14%,
   against net7rl012's +7.05% on generations 0–2's originals). `N7r` sits close to
-  the originals ([datasets.md](datasets.md#net7rl012-l050-r42054816508-n5000)), so
+  the originals ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#net7rl012-l050-r42054816508-n5000)), so
   little changed there.
 - **Generations 0–2:** net7rl012345 is a little worse on the `N7` labels both nets
   trained on (+0.54%), and level on results.
@@ -626,7 +633,7 @@ merge."
 - **The held-out comparison had warned:** small, mixed differences, and slightly
   worse on generations 0–2's `N7` labels (+0.54%).
 - **Not measured:** why. `N7r` sits much closer to the originals than `N7` did
-  ([datasets.md](datasets.md#net7rl012-l050-r42054816508-n5000)), and it mixes two
+  ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#net7rl012-l050-r42054816508-n5000)), and it mixes two
   labellers with `N7`. This is one training run.
 
 ## net7rl012-l050-r42054816508
@@ -641,7 +648,7 @@ existed, in #198, and is unchanged.
 | Question | With the same positions and results, do better scores make a stronger net? |
 | The one change | Generations 0–2 use label set `N7`, net7's scores at 5,000 nodes, in place of their originals from PeSTO, net 1 and net2x80. That's 906.6M of 2,348.9M records (38.6%) |
 | Held the same | Positions, results, split, seeds, generations 3–5's labels, architecture, λ 0.5 and the schedule |
-| Prepared set | `g0-5·N7(0-2)` ([datasets.md](datasets.md#prepared-training-sets)). Its records, workers, shards and held-out workers must match net7's `g0-5·O` |
+| Prepared set | `g0-5·N7(0-2)` ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#prepared-training-sets)). Its records, workers, shards and held-out workers must match net7's `g0-5·O` |
 | Prerequisite | `N7` is complete for generations 0–2 and its audit is recorded |
 | Gate | H1 in both the timed and the fixed-node SPRT against net7. Anything else drops the net, unless the owner merges over the check with a stated reason |
 
@@ -722,7 +729,7 @@ comparison wasn't of one file against itself.
 - **Noise:** these differences have no error bars, and this is one training run
   of each net.
 - **Why results-only loss fell:** `N7`'s scores are larger than the originals
-  ([datasets.md](datasets.md#net7-l050-r41363264869-n5000)), and a net's
+  ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#net7-l050-r41363264869-n5000)), and a net's
   confidence affects this loss, so it may not all be better judgement.
 - **The `Train` artifact's copy of the net:** only the S3 copy was hashed.
 
@@ -815,7 +822,7 @@ why both legs needed 8,000 games or more.
 
 net6's recipe with **4 king buckets**: each side's inputs are indexed by its
 own king's region, mirrored with the king on files e–h, with a factoriser
-([king-buckets.md](king-buckets.md), #172, #173). The only change: same data,
+([king-buckets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/king-buckets.md), #172, #173). The only change: same data,
 width, output buckets, λ, schedule and seeds, and byte-identical prepared
 data (net6's `train.data` and `val.data` SHA-256s), so the **same held-out
 positions** as net6.
@@ -1212,7 +1219,7 @@ cargo run --release -p rusty-chess-tools --bin nnue-scale -- --fens tests/openin
   evaluation-based margin in the search a little tighter in pawns than the last.
 - **The pieces jumped once,** by about a quarter, with net7rl012: the net trained
   on generations 0–2 relabelled by net7, whose scores are larger than the
-  originals ([datasets.md](datasets.md#net7-l050-r41363264869-n5000)). A net
+  originals ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#net7-l050-r41363264869-n5000)). A net
   whose evaluation is a quarter larger makes the search's margins a fifth
   tighter, so that net's SPRT gain (+16.3 timed, #202) can't be read as better
   labels alone; whether the scale was part of it is not known.
@@ -1278,7 +1285,7 @@ the fixed-node SPRT against the current default.
    (+4.9 ± 3.9 timed, −1.2 ± 4.2 at fixed nodes, both inconclusive; #159).
 7. **The current loop.** Generation 4 (net 5) and generation 5 (net6k4) are
    done, and **generation 6 (net7rl012, 849.9M positions) is audited**
-   ([datasets.md](datasets.md#generation-6-net7rl012)); [net8](#net8-l050-r42564788061) on generations 0–6
+   ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#generation-6-net7rl012)); [net8](#net8-l050-r42564788061) on generations 0–6
    beat net7rl012 (+14.1 ± 6.9 timed, +8.8 ± 5.3 at fixed nodes; #235) and is the
    default since `v0.48.0`, with `datagen.toml` at generation 7. Generation 7 has
    not been played.
@@ -1291,18 +1298,18 @@ the fixed-node SPRT against the current default.
      +21.7 ± 9.0 timed, +40.0 ± 12.4 at fixed nodes; #172, #173, #175).
      Follow-ups: a refresh cache for speed, a longer low-LR phase, and a
      finer layout (bucket 3 holds 31% of kings over 24 squares;
-     [king-buckets.md](king-buckets.md#measured)).
+     [king-buckets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/king-buckets.md#measured)).
    - ~~**net7:**~~ done, net6k4's recipe on generations 0–5 (+6.8 ± 4.5
      timed; +5.1 ± 4.2 at fixed nodes, inconclusive at the cap; #180).
    - **Relabelling** the oldest generations with net7: the tool, the `relabel`
      profile and the workflow exist (#179, #185, #186). The first run failed on
      old manifests, fixed in #187. `N7` on generations 0–2 is complete and
-     audited ([datasets.md](datasets.md#label-sets)), from
+     audited ([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#label-sets)), from
      [41788545675](https://github.com/jwallace145/rusty-chess-v2/actions/runs/41788545675) and its top-ups, with #189 (stay on spot) and
      #196 (batches). #190 (`Train` chooses a label set) had its first real run in
      [net7rl012](#net7rl012-l050-r42054816508), which passed both SPRT legs against net7 (#202).
      Then net7rl012 relabelled generations 3–5 (`N7r`, audited;
-     [datasets.md](datasets.md#net7rl012-l050-r42054816508-n5000)), the first
+     [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#net7rl012-l050-r42054816508-n5000)), the first
      label set from the relabel manager (#204).
      [net7rl012345](#net7rl012345-l050-r42398995769), `N7r` on generations 3–5, was
      **dropped**: +1.9 ± 4.1 timed (inconclusive), −5.2 ± 5.2 at fixed nodes (H0; #210).
@@ -1338,7 +1345,7 @@ For every net trained on the GPU task, kept or not:
 3. If it's dropped, say why, with the numbers. A dispatch cancelled before
    training gets a line in the net's section.
 4. Update "What we've learned" when a result changes what to try next.
-5. **Add the net to [datasets.md](datasets.md#which-labels-each-net-trained-on):**
+5. **Add the net to [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#which-labels-each-net-trained-on):**
    its label set per generation, from `training.json`'s `datasets` and `labels`,
    and its prepared set. Records from before #190 have no `labels`; their
    `selfplay/v1/` prefixes mean `O`.
@@ -1362,7 +1369,7 @@ Checks of this ledger against its primary sources.
 | Both SPRT legs of all 14 tested nets (Elo, games, W / L / D) against each PR's comment | All match. net7 was missing and is now recorded |
 | Ladder ratings of 22 releases, `v0.28.0`–`v0.44.1`, against the release notes | All match, except that the summary gives net 1's re-rating on the Stockfish 19 ladder (2977 ± 32, #126) where the release notes keep the original 3000 ± 37; net 1's section gives both. The re-rating itself wasn't re-derived. `v0.43.0`–`v0.44.1` were missing and are now recorded |
 | Every `Train` run listed by GitHub (16) has an entry here | One was missing, cancelled run 41170474213, now under net4w512 |
-| Training + held-out records of nets 1, 2, 3, 5, 6 and 7 against the sum of their generations in [datasets.md](datasets.md) | Exact, as are net7's shard total and net6's |
+| Training + held-out records of nets 1, 2, 3, 5, 6 and 7 against the sum of their generations in [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md) | Exact, as are net7's shard total and net6's |
 | net7's section against its `training.json` and `eval_check` in the run's artifact | All match; its file's SHA-256 matches `crates/search/nets/` |
 
 **Not checked:** the `training.json` of nets other than net7, and anything in
@@ -1381,7 +1388,7 @@ This closes the first item left open above. **Not checked:** anything in S3, and
 `v0.44.3`'s rating, which is still running.
 
 **2026-11-12,** at `v0.48.1`, during the overnight research session
-([research-log.md](research-log.md)):
+([research-log.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/research-log.md)):
 
 | Check | Result |
 |:--|:--|
