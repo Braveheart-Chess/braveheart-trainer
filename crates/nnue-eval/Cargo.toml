@@ -1,0 +1,22 @@
+[package]
+name = "braveheart-nnue-eval"
+version = "0.1.0"
+description = "The engine's static evaluation of positions with a trained net, checked against the trainer's"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "nnue-eval"
+path = "src/main.rs"
+
+[dependencies]
+braveheart-core.workspace = true
+braveheart-search.workspace = true
+serde_json = "1.0"
+
+[lints]
+workspace = true
