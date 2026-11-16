@@ -30,8 +30,8 @@ own bucket, `jwall-engineering-braveheart-trainer-nets`, at the data move. Until
 - The engine's [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md)
   is the ledger; the copy here is a snapshot.
 - The Train and GPU smoke workflows and the `ci/` scripts are not ported yet.
-  The project file declares no dataset, so Train stops at its first step, and
-  GPU smoke's role trusts only the engine repository.
+  They still run as the engine's project, whose launch role trusts only the
+  engine repository, so they fail before launching anything.
 
 ## Building
 
