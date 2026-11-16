@@ -25,4 +25,43 @@ refer to the engine repository.
 **Interim.** Until the data move, the positions and the nets stay in
 `s3://jwall-engineering-braveheart-nnue`, owned by the engine's project, and Train
 and GPU smoke keep running from the engine repository. This repository gets its
-own bucket, `jwall-engineering-braveheart-trainer-nets`, at the data move.
+own bucket, `jwall-engineering-braveheart-trainer-nets`, at the data move. Until then:
+
+- The engine's [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md)
+  is the ledger; the copy here is a snapshot.
+- The Train and GPU smoke workflows and the `ci/` scripts are not ported yet.
+  The project file declares no dataset, so Train stops at its first step, and
+  GPU smoke's role trusts only the engine repository.
+
+## Building
+
+Two Cargo workspaces, so bullet's GPU backends never reach nnue-eval's build:
+
+| Path | What it is |
+|:--|:--|
+| `crates/nnue-eval/` | The engine's static evaluation of positions with a net, checked against the trainer's (root workspace, `Cargo.lock`) |
+| `trainer/` | The bullet trainer: `prepare`, `train` and `validate` (its own workspace and `trainer/Cargo.lock`) |
+| `ci/` | The task scripts the workflows run |
+| `docs/` | The pipeline, the ledger and the architecture snapshots |
+| `tools/nnue-diagrams/` | The architecture snapshots' generator and check |
+
+Both are pinned to one engine release (`Cargo.toml` and `trainer/Cargo.toml`;
+a test checks the two locks agree), and the trainer to one bullet commit.
+
+```sh
+cargo build --release --locked --bin nnue-eval
+cargo test --workspace --locked                       # includes nnue-eval's golden test
+cd trainer && cargo build --release --locked --features cuda   # or metal
+cargo test --locked                                   # from trainer/: no backend needed
+```
+
+`crates/nnue-eval/tests/golden.rs` pins how nets are checked: nnue-eval scores
+eight positions with the engine's embedded net exactly as the engine's own
+nnue-eval did. The architecture snapshots are checked against the pinned
+engine's embedded and retired nets:
+
+```sh
+npm ci
+npm run engine:fetch          # the engine at the commit Cargo.lock pins, into .engine/
+npm run nnue:diagrams:check
+```

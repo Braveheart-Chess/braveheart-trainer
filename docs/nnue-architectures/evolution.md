@@ -31,13 +31,13 @@ accept H1.
 - **Output buckets, 1 → 8 heads (net5b8).** Eight output layers over the
   same hidden layer, one chosen by the piece count `(pieces − 2) / 4`, so
   endgames, middlegames and openings each weight the activations their own
-  way. A single evaluation still computes one head. [nnue.md: Output buckets](../nnue.md#output-buckets).
+  way. A single evaluation still computes one head. [nnue.md: Output buckets](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md#output-buckets).
 - **King buckets, 1 → 4 views (net6k4).** Each side's 768 input features get
   four sets of weights, chosen by where its own king stands, with the board
   mirrored when that king is on files e–h. Only a side's own king moving can
   change its view, which is when the engine rebuilds that side's accumulator.
   The factoriser used in training is merged into the saved weights, so the
-  file and the diagram show plain `768 × 4 → H`. [king-buckets.md](../king-buckets.md).
+  file and the diagram show plain `768 × 4 → H`. [king-buckets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/king-buckets.md).
 - **Width, 512 → 768 (net7rl012w768, dropped).** The one topology change
   that did not survive: clearly smarter per node (+28.9 ± 10.2 at fixed
   nodes) and clearly slower (about 14% a node), it lost the timed leg. The

@@ -25,5 +25,10 @@ flate2 = "1"
 serde_json = "1.0"
 sha2 = "0.10"
 
+[dev-dependencies]
+# The engine release nnue-eval checks nets against (the root Cargo.toml pins the
+# same tag): the tests compare the trainer's king bucket layout with its.
+braveheart-search = { git = "https://github.com/Braveheart-Chess/braveheart", tag = "v0.54.0" }
+
 [profile.release]
 opt-level = 3

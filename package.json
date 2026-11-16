@@ -1,0 +1,23 @@
+{
+  "name": "braveheart-trainer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tooling for commit message linting and the NNUE architecture diagrams. The trainer itself is Rust; see README.md.",
+  "type": "module",
+  "scripts": {
+    "commitlint": "commitlint",
+    "engine:fetch": "sh tools/fetch-engine.sh",
+    "nnue:diagrams": "node tools/nnue-diagrams/cli.mjs generate",
+    "nnue:diagrams:check": "node tools/nnue-diagrams/cli.mjs check",
+    "nnue:diagrams:list": "node tools/nnue-diagrams/cli.mjs list",
+    "test": "node --test \"tools/**/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@terrastruct/d2": "0.1.33"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

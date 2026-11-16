@@ -1,0 +1,29 @@
+# The workspace for nnue-eval. `trainer/` is a workspace of its own (bullet's
+# GPU backends never leak into this build), with its own Cargo.lock.
+[workspace]
+resolver = "3"
+members = ["crates/nnue-eval"]
+exclude = ["trainer"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+authors = ["Jimmy Wallace"]
+repository = "https://github.com/Braveheart-Chess/braveheart-trainer"
+publish = false
+
+# The engine, pinned to one release: nnue-eval scores a trained net with the
+# engine's own loader and quantized evaluation, and the trainer's tests check
+# its layout against the same release (trainer/Cargo.toml pins the same tag;
+# crates/nnue-eval/tests/engine_pin.rs checks that). Moving the pin is a
+# deliberate change of which engine a net is checked against.
+[workspace.dependencies]
+braveheart-core = { git = "https://github.com/Braveheart-Chess/braveheart", tag = "v0.54.0" }
+braveheart-search = { git = "https://github.com/Braveheart-Chess/braveheart", tag = "v0.54.0" }
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }

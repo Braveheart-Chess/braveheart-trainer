@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
 
 import { PATHS, main } from "./cli.mjs";
@@ -16,8 +16,11 @@ function repoCopy() {
     mkdirSync(join(root, rel), { recursive: true });
     cpSync(join(REPO_ROOT, rel), join(root, rel), { recursive: true });
   }
+  // The engine checkout (`npm run engine:fetch`) and the lock that pins it.
+  mkdirSync(dirname(join(root, PATHS.nnueRs)), { recursive: true });
+  cpSync(join(REPO_ROOT, PATHS.engine, ".commit"), join(root, PATHS.engine, ".commit"));
+  cpSync(join(REPO_ROOT, "Cargo.lock"), join(root, "Cargo.lock"));
   // The pages link to other docs and to the tool's README; the link check needs them.
-  mkdirSync(join(root, "crates/search/src"), { recursive: true });
   mkdirSync(join(root, "tools/nnue-diagrams"), { recursive: true });
   for (const f of readdirSync(join(REPO_ROOT, "docs")).filter((f) => f.endsWith(".md"))) cpSync(join(REPO_ROOT, "docs", f), join(root, "docs", f));
   cpSync(join(REPO_ROOT, "tools/nnue-diagrams/README.md"), join(root, "tools/nnue-diagrams/README.md"));
@@ -102,7 +105,7 @@ test("check fails when a status disagrees with the engine, or an orphan file app
     writeFileSync(join(root, PATHS.diagrams, "notes.txt"), "x");
     const r = await quiet(() => main(["check"], root));
     assert.equal(r.code, 1);
-    assert.ok(r.errors.some((e) => /file_bytes 3163152 but crates\/search\/nets\/net8x160-l050-r43390801430\.nnue is 3163200 bytes/.test(e)), r.errors.join("\n"));
+    assert.ok(r.errors.some((e) => /file_bytes 3163152 but \.engine\/crates\/search\/nets\/net8x160-l050-r43390801430\.nnue is 3163200 bytes/.test(e)), r.errors.join("\n"));
     assert.ok(r.errors.some((e) => /notes\.txt: unexpected file/.test(e)), r.errors.join("\n"));
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -134,4 +137,22 @@ test("list prints every snapshot in training order", async () => {
   assert.equal(lines.length, 19);
   assert.match(lines[0], /^net1-l050-r41022503872 /);
   assert.match(lines.at(-1), /^net8x160-l050-r43390801430 .*default/);
+});
+
+test("check fails unless the engine checkout is the commit Cargo.lock pins", { timeout: 120_000 }, async () => {
+  const root = repoCopy();
+  try {
+    const commit = join(root, PATHS.engine, ".commit");
+    writeFileSync(commit, `${"0".repeat(40)}\n`);
+    let r = await quiet(() => main(["check"], root));
+    assert.equal(r.code, 1);
+    assert.ok(r.errors.some((e) => /\.engine: engine commit 0{40}, but Cargo\.lock pins [0-9a-f]{40}; run `npm run engine:fetch`/.test(e)), r.errors.join("\n"));
+
+    rmSync(join(root, PATHS.engine), { recursive: true, force: true });
+    r = await quiet(() => main(["check"], root));
+    assert.equal(r.code, 1);
+    assert.ok(r.errors.some((e) => /\.engine: missing, but Cargo\.lock pins/.test(e)), r.errors.join("\n"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
