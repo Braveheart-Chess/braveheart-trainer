@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/Braveheart-Chess/braveheart-trainer/compare/v0.2.0...v0.2.1) (2026-11-16)
+
+
+### Documentation
+
+* open the readme with the organisation banner ([#8](https://github.com/Braveheart-Chess/braveheart-trainer/issues/8)) ([6512458](https://github.com/Braveheart-Chess/braveheart-trainer/commit/65124588d01ad0003ae3767421b5214391121e7d))
+* record the nets' copy to this bucket and its audit; nets.md is the ledger now ([#10](https://github.com/Braveheart-Chess/braveheart-trainer/issues/10)) ([f2a5115](https://github.com/Braveheart-Chess/braveheart-trainer/commit/f2a5115cd4ae7744d862382f37294366ebd2c317))
+
 ## [0.2.0](https://github.com/Braveheart-Chess/braveheart-trainer/compare/v0.1.0...v0.2.0) (2026-11-16)
 
 
