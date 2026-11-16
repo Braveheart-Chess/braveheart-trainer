@@ -30,12 +30,13 @@ on 2026-11-16, with their history. `crates/tools/src/bin/nnue_eval.rs` became
 `crates/nnue-eval/src/main.rs`. Pull request numbers in the older commit messages
 refer to the engine repository.
 
-**Until the cutover** the nets are being copied, key for key, from
-`s3://jwall-engineering-braveheart-nnue`, owned by the engine's project, to
-this project's `s3://jwall-engineering-braveheart-trainer-nets`:
+**Until the cutover** the nets are in two buckets: they were copied, key for
+key, from `s3://jwall-engineering-braveheart-nnue`, owned by the engine's
+project, to this project's `s3://jwall-engineering-braveheart-trainer-nets` on
+2026-11-16, and audited:
 
-- The engine's [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md)
-  is the ledger until the copy; the copy here is a snapshot.
+- [docs/nets.md](docs/nets.md) is the ledger since the copy; the engine's was
+  until then.
 - The Train and GPU smoke workflows are ported to this project and both
   buckets, and wait for the cutover ([AGENTS.md](AGENTS.md#until-the-cutover)).
 

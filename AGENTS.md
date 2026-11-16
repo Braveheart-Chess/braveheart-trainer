@@ -21,10 +21,10 @@ This repository trains Braveheart's NNUE nets and keeps their record: `trainer/`
 
 ## Until the cutover
 
-The nets are moving, key for key, from `s3://jwall-engineering-braveheart-nnue`, owned by the engine's project, to this project's `s3://jwall-engineering-braveheart-trainer-nets`, and the positions to braveheart-selfplay's bucket. The workflows and `ci/` scripts here are ported to this project, both buckets and the pinned engine. Nothing runs them until the engine gives its dataset up (the cutover).
+The nets were copied, key for key, from `s3://jwall-engineering-braveheart-nnue`, owned by the engine's project, to this project's `s3://jwall-engineering-braveheart-trainer-nets` on 2026-11-16, and the positions to braveheart-selfplay's bucket; both copies are audited ([docs/nets.md](docs/nets.md#audit-log)). The workflows and `ci/` scripts here are ported to this project, both buckets and the pinned engine. Nothing runs them until the engine gives its dataset up (the cutover).
 
-- **Don't run Train or GPU smoke here before the cutover.** Until then the engine's bucket is the data's home and the new ones copies being made, so a net trained in either place would be missing from the other.
-- **The engine's [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md) is the ledger until the copy.** The copy here is a snapshot from engine commit `1a25b13`; record nothing in it. It is refreshed from the engine's when the data is copied, together with the architecture snapshots, and from then on this one is the ledger.
+- **Don't run Train or GPU smoke here before the cutover.** Until then the engine's workflows still point at its bucket, so a net trained in either place would be missing from the other.
+- **[docs/nets.md](docs/nets.md) is the ledger since the copy (2026-11-16).** Record every net in it. The engine's [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md) was the ledger until then; this one and the architecture snapshots were refreshed from the engine's at the copy, unchanged since engine commit `1a25b13`.
 
 ## Experiments and the research record
 
