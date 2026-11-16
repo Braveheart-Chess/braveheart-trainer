@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+# One run per PR per kind of event; a new push cancels the previous run for
+# that push stream. A body or title edit (`edited`) gets its own stream so it
+# can never cancel a run that is checking the code: Release Please pushes and
+# edits in the same second, and a cancelled check run blocks the merge.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}-${{ github.event.action == 'edited' && 'edited' || 'code' }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  CARGO_TERM_COLOR: always
+  # CI builds for a portable baseline rather than the host CPU in .cargo/config.toml.
+  RUSTFLAGS: -D warnings
+
+jobs:
+  commitlint:
+    name: Commit messages
+    runs-on: ubuntu-latest
+    # Dependabot's commit messages carry a capitalised subject and a release
+    # notes body, which this repo's one-line rule rejects. Its PRs are squash
+    # merged under a lowercase Conventional Commit title instead, so the
+    # commit that lands on main still conforms. A skipped job satisfies the
+    # required status check.
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.event.action != 'edited'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Every commit in the PR range is checked, so rebase merges land
+          # only one-line Conventional Commits on main.
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Lint every commit in base..head
+        run: >-
+          npx commitlint
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+          --verbose
+      - name: Unit test the only-coauthor-trailers rule
+        run: node --test "tools/commitlint/*.test.mjs"
+
+  pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      # Squash merges use the PR title as the commit message, so it must be a
+      # valid Conventional Commit too.
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            chore
+            refactor
+            ci
+            build
+            perf
+            style
+            test
+            revert
+          requireScope: false
+          # Dependabot titles start with a capital; they are retitled at merge.
+          ignoreLabels: |
+            dependencies
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" must start with a lowercase letter.
+
+  nnue-diagrams:
+    name: NNUE diagrams
+    runs-on: ubuntu-latest
+    if: github.event.action != 'edited'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # The engine at the commit Cargo.lock pins: the check compares the
+      # manifests with its embedded and retired nets.
+      - run: npm run engine:fetch
+      # Re-renders every architecture snapshot with the pinned D2 build and
+      # compares it byte for byte with what is committed; also checks that
+      # every net in docs/nets.md has a snapshot and that the gallery's links
+      # resolve. Fails without rewriting anything.
+      - run: npm run nnue:diagrams:check
+      - name: Unit test the diagram tool
+        run: node --test "tools/nnue-diagrams/*.test.mjs"
+
+  # The code jobs skip on `edited`: a title or body edit cannot change what
+  # they check, and a skipped job satisfies the required status check.
+  # Each covers both workspaces: nnue-eval's at the root, and the trainer's,
+  # built without a GPU backend (the backends need CUDA or Metal; Train and
+  # GPU smoke build them on the instance).
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    if: github.event.action != 'edited'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all --check
+      - run: cargo fmt --manifest-path trainer/Cargo.toml --all --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    if: github.event.action != 'edited'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            trainer
+      - run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+      - run: cargo clippy --manifest-path trainer/Cargo.toml --all-targets --locked -- -D warnings
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    if: github.event.action != 'edited'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            trainer
+      # Includes crates/nnue-eval/tests/golden.rs: nnue-eval still scores as
+      # the engine's own did, and both locks pin one engine.
+      - run: cargo test --workspace --locked
+      # Includes the king bucket layout against the pinned engine.
+      - run: cargo test --manifest-path trainer/Cargo.toml --locked

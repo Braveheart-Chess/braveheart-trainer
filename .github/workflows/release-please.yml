@@ -1,0 +1,45 @@
+name: Release
+
+# Merges to main accumulate changes in a Release Please PR. Merging that PR is
+# the deliberate, human-reviewed act that tags a version and writes
+# CHANGELOG.md. Nothing is published: the trainer and nnue-eval are built on
+# the task instance from the commit a workflow runs.
+
+on:
+  push:
+    branches: [main]
+  # By hand, from main, when GitHub drops a push event. Release Please then
+  # tags any merged release PR still labelled `autorelease: pending`.
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      # A GitHub App token (not GITHUB_TOKEN) so that release PRs are authored
+      # by the org's release bot and CI runs on them.
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+      - uses: googleapis/release-please-action@v5
+        id: rp
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
