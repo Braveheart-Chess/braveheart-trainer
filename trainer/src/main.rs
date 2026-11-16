@@ -1298,18 +1298,11 @@ mod tests {
 
     #[test]
     fn the_king_bucket_layout_is_the_engines() {
-        let engine = include_str!("../../crates/search/src/nnue.rs");
-        let start = engine
-            .find("pub const KING_BUCKET_LAYOUT: [usize; 32] = [")
-            .expect("the engine defines KING_BUCKET_LAYOUT");
-        let body = &engine[start..];
-        let body = &body[body.find('=').unwrap() + 1..body.find("];").unwrap()];
-        let engine_layout: Vec<usize> = body
-            .split(|c: char| !c.is_ascii_digit())
-            .filter(|t| !t.is_empty())
-            .map(|t| t.parse().unwrap())
-            .collect();
-        assert_eq!(engine_layout, KING_BUCKET_LAYOUT);
+        // The pinned engine release (a dev-dependency), not a copy of its source.
+        assert_eq!(
+            braveheart_search::nnue::KING_BUCKET_LAYOUT,
+            KING_BUCKET_LAYOUT
+        );
     }
 
     #[test]
