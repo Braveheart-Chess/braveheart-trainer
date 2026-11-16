@@ -2,7 +2,10 @@
 # The GPU profile's acceptance test, run by the `GPU smoke` workflow on one
 # fresh g6.xlarge (jwall-engineering-infra's remote-task, profile gpu): the
 # GPU and CUDA work, bullet's CUDA backend builds our trainer, and the
-# dataset grants hold in both directions. A few minutes, well under a dollar.
+# dataset grants hold in both directions: the positions (braveheart-selfplay's
+# bucket) can be read and not written or deleted, and the nets (this
+# project's) can be written but not listed beyond the grant or deleted. A few
+# minutes, well under a dollar.
 # Starts in the repository root at the workflow's commit, with OUT_DIR and
 # SCRATCH_DIR set. Never exits 75, which the runner reserves for interruptions.
 
@@ -10,7 +13,8 @@ set -euo pipefail
 : "${OUT_DIR:?OUT_DIR is not set}"
 scratch="${SCRATCH_DIR:-/tmp}/gpu-smoke"
 mkdir -p "$scratch"
-bucket=s3://jwall-engineering-braveheart-nnue
+positions=s3://jwall-engineering-braveheart-selfplay-positions
+nets=s3://jwall-engineering-braveheart-trainer-nets
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 summary="$OUT_DIR/summary.txt"
 : > "$summary"
@@ -68,15 +72,22 @@ echo "   (build took $(( $(date +%s) - start ))s)" | tee -a "$summary"
 cp "$scratch/check.out" "$OUT_DIR/trainer-build.log"
 
 echo "== dataset grants"
-one=$(aws s3 ls "$bucket/data/selfplay/v1/gen=0/run=20261030-41007876197-1/task=t1/manifests/" | awk 'NR == 1 {print $4}')
-check "list data/selfplay/" ok aws s3 ls "$bucket/data/selfplay/v1/gen=0/"
-check "read an object under data/selfplay/" ok \
-  aws s3 cp --only-show-errors "$bucket/data/selfplay/v1/gen=0/run=20261030-41007876197-1/task=t1/manifests/$one" "$scratch/"
+# A shard of generation 0's first run, copied from the engine's bucket at the split.
+run=data/selfplay/v1/gen=0/run=20261030-41007876197-1/task=t1
+one=$(aws s3 ls "$positions/$run/manifests/" | awk 'NR == 1 {print $4}')
+check "list the positions" ok aws s3 ls "$positions/data/selfplay/v1/gen=0/"
+check "read a position shard's manifest" ok aws s3 cp --only-show-errors "$positions/$run/manifests/$one" "$scratch/"
 echo "smoke test $stamp" > "$scratch/hello.txt"
-check "write under data/nets/" ok aws s3 cp --only-show-errors "$scratch/hello.txt" "$bucket/data/nets/smoke-$stamp/hello.txt"
-check "list data/ outside the grants" denied aws s3 ls "$bucket/data/"
-check "write under data/selfplay/" denied \
-  aws s3 cp --only-show-errors "$scratch/hello.txt" "$bucket/data/selfplay/SMOKE-TEST-MUST-BE-DENIED-$stamp.txt"
+check "write under the positions" denied \
+  aws s3 cp --only-show-errors "$scratch/hello.txt" "$positions/data/selfplay/SMOKE-TEST-MUST-BE-DENIED-$stamp.txt"
+# Deletes name keys that don't exist: S3 answers a permitted delete of a missing
+# key with success, so this tests the permission without risking any data.
+check "delete under the positions" denied \
+  aws s3api delete-object --bucket "${positions#s3://}" --key "data/selfplay/SMOKE-TEST-NO-SUCH-KEY-$stamp"
+check "write under data/nets/" ok aws s3 cp --only-show-errors "$scratch/hello.txt" "$nets/data/nets/smoke-$stamp/hello.txt"
+check "list the nets bucket outside the grant" denied aws s3 ls "$nets/data/"
+check "delete under data/nets/" denied \
+  aws s3api delete-object --bucket "${nets#s3://}" --key "data/nets/smoke-$stamp/SMOKE-TEST-NO-SUCH-KEY"
 
 echo "== $pass passed, $fail failed" | tee -a "$summary"
 [ "$fail" = 0 ]

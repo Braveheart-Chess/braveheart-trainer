@@ -81,24 +81,29 @@ jobs:
           BUCKETS: ${{ inputs.output-buckets }}
           KINGS: ${{ inputs.king-buckets }}
           RUN_ID: ${{ github.run_id }}
+          POSITIONS_BUCKET: jwall-engineering-braveheart-selfplay-positions
         run: |
           [[ "$NET_ID" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "::error::net-id must be lower-case letters, digits and '-'"; exit 1; }
           [[ "$SUPERBATCHES" =~ ^[0-9]+$ ]] && [ "$SUPERBATCHES" -ge 1 ] && [ "$SUPERBATCHES" -le 200 ] || { echo "::error::superbatches must be 1..200"; exit 1; }
           [[ "$HIDDEN" =~ ^[0-9]+$ ]] && [ "$HIDDEN" -ge 16 ] && [ "$HIDDEN" -le 1024 ] && [ $((HIDDEN % 16)) = 0 ] || { echo "::error::hidden must be a multiple of 16 from 16 to 1024"; exit 1; }
           [[ "$GENERATIONS" =~ ^[0-9]+(,[0-9]+)*$ ]] || { echo "::error::generations must be whole numbers separated by commas, e.g. 0,1"; exit 1; }
+          # The nets go to this project's dataset; the positions are
+          # braveheart-selfplay's, which grants this project's GPU tasks read
+          # access (its jwall-engineering-sites.yaml, `readers`).
           bucket=$(yq -r '[.components[] | select(.kind == "dataset")][0].bucket // ""' jwall-engineering-sites.yaml)
           prefix=$(yq -r '[.components[] | select(.kind == "dataset")][0].prefix // ""' jwall-engineering-sites.yaml)
           [ -n "$bucket" ] && [ -n "$prefix" ] || { echo "::error::no dataset component in jwall-engineering-sites.yaml"; exit 1; }
+          positions="s3://$POSITIONS_BUCKET/data/selfplay"
           # One --dataset per generation, as a JSON array of arguments.
           datasets=$(echo "$GENERATIONS" | tr ',' '\n' | sort -nu \
-            | jq -R --arg base "s3://$bucket/${prefix%/}/selfplay/v1" '["--dataset", "\($base)/gen=\(.)/"]' | jq -sc 'add')
+            | jq -R --arg base "$positions/v1" '["--dataset", "\($base)/gen=\(.)/"]' | jq -sc 'add')
           # A partial label set is the task's to refuse: only it can read S3.
           if [ -n "$LABELS" ]; then
             [[ "$LABELS" =~ ^[0-9]+=[a-z0-9][a-z0-9._-]*(,[0-9]+=[a-z0-9][a-z0-9._-]*)*$ ]] || { echo "::error::labels must be generation=label set separated by commas, e.g. 0=net7-l050-r41363264869-n5000"; exit 1; }
             for s in $(echo "$LABELS" | tr ',' ' '); do
               echo ",$GENERATIONS," | grep -q ",${s%%=*}," || { echo "::error::labels names generation ${s%%=*}, which is not in generations ($GENERATIONS)"; exit 1; }
             done
-            datasets=$(jq -c --arg root "s3://$bucket/${prefix%/}/selfplay/relabel" --arg l "$LABELS" \
+            datasets=$(jq -c --arg root "$positions/relabel" --arg l "$LABELS" \
               '. + ["--labels", $root] + ($l | split(",") | map(["--label-set", .]) | add)' <<< "$datasets")
           fi
           nets="s3://$bucket/${prefix%/}/nets"
@@ -124,9 +129,9 @@ jobs:
       max-parallel: 1 # the G and VT on-demand quota (5 vCPUs) fits one g6.xlarge
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.nets) }}
-    uses: jwallace145/jwall-engineering-infra/.github/workflows/remote-task.yml@v0.28.0
+    uses: jwallace145/jwall-engineering-infra/.github/workflows/remote-task.yml@v0.36.0
     with:
-      project: braveheart
+      project: braveheart-trainer
       profile: gpu
       script: ci/train-task.sh
       args: ${{ matrix.args }}

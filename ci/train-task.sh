@@ -135,14 +135,17 @@ if aws s3 ls "$nets/$net_id/" >/dev/null 2>&1; then
   exit 1
 fi
 
-sha=$(git rev-parse HEAD)
+# This repository's commit trains the net; the engine it is checked against is
+# the one Cargo.lock pins. training.json records both (docs/training.md).
+trainer_sha=$(git rev-parse HEAD)
+read -r engine_version engine_sha < <(ci/engine-pin.sh)
 gpu="none"; driver=""; cuda=""
 if command -v nvidia-smi >/dev/null; then
   gpu=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader | head -1)
   driver=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1)
   cuda=$(nvcc --version 2>/dev/null | sed -n 's/.*release \([0-9.]*\).*/\1/p' || true)
 fi
-echo "== train: $net_id, $hidden hidden, $buckets output bucket(s), $king_buckets king bucket(s), λ $wdl, $superbatches superbatches of $batches batches; commit ${sha:0:7}; GPU: $gpu"
+echo "== train: $net_id, $hidden hidden, $buckets output bucket(s), $king_buckets king bucket(s), λ $wdl, $superbatches superbatches of $batches batches; braveheart-trainer ${trainer_sha:0:7}, engine $engine_version (${engine_sha:0:7}); GPU: $gpu"
 
 echo "-- building ($(since)s)"
 export CARGO_TERM_COLOR=never
@@ -153,7 +156,9 @@ if [ "$backend" = cuda ] && [ -z "${CUDA_PATH:-}" ]; then
   export CUDA_PATH
 fi
 (cd trainer && cargo build --release --locked --quiet --features "$backend")
-cargo build --release --locked --quiet -p braveheart-tools --bin nnue-eval
+cargo build --release --locked --quiet --bin nnue-eval
+# The shapes the pinned engine reads, from its own source.
+nnue_rs=$(ci/engine-nnue-rs.sh)
 
 # One directory per dataset (its generation's folder name, gen=N), so shards
 # of different generations never share a path; prepare walks them all, and
@@ -182,12 +187,12 @@ trainer/target/release/braveheart-trainer train --data "$scratch/data" --net-id 
   --output-buckets "$buckets" --king-buckets "$king_buckets" 2>&1 | tee "$scratch/train.log"
 trained=$(since)
 
-engine_widths=$(sed -n 's/^pub const WIDTHS: \[usize; [0-9]*\] = \[\(.*\)\];.*/\1/p' crates/search/src/nnue.rs | tr -d ' ')
+engine_widths=$(sed -n 's/^pub const WIDTHS: \[usize; [0-9]*\] = \[\(.*\)\];.*/\1/p' "$nnue_rs" | tr -d ' ')
 # An engine from before output buckets reads single-bucket nets only.
-engine_buckets=$(sed -n 's/^pub const OUTPUT_BUCKETS: \[usize; [0-9]*\] = \[\(.*\)\];.*/\1/p' crates/search/src/nnue.rs | tr -d ' ')
+engine_buckets=$(sed -n 's/^pub const OUTPUT_BUCKETS: \[usize; [0-9]*\] = \[\(.*\)\];.*/\1/p' "$nnue_rs" | tr -d ' ')
 engine_buckets=${engine_buckets:-1}
 # An engine from before king buckets reads single-view nets only.
-engine_kings=$(sed -n 's/^pub const KING_BUCKETS: \[usize; [0-9]*\] = \[\(.*\)\];.*/\1/p' crates/search/src/nnue.rs | tr -d ' ')
+engine_kings=$(sed -n 's/^pub const KING_BUCKETS: \[usize; [0-9]*\] = \[\(.*\)\];.*/\1/p' "$nnue_rs" | tr -d ' ')
 engine_kings=${engine_kings:-1}
 check_ran=True
 if [[ ",$engine_widths," == *",$hidden,"* && ",$engine_buckets," == *",$buckets,"* && ",$engine_kings," == *",$king_buckets,"* ]]; then
@@ -228,7 +233,8 @@ json.dump({
                  "batch_size": 16384, "lr": 0.001, "lr_gamma": 0.1, "lr_step": max(1, $superbatches * 9 // 20),
                  "optimiser": "AdamW (bullet defaults, weights clipped to ±1.98)",
                  "loss": "sigmoid(output) squared error against λ·result + (1 − λ)·sigmoid(score / 400)"},
-    "versions": {"engine_commit": "$sha", "bullet_rev": "$bullet_rev", "bulletformat": "1.8.0", "backend": "$backend"},
+    "versions": {"engine_commit": "$engine_sha", "engine_version": "$engine_version", "trainer_commit": "$trainer_sha",
+                 "bullet_rev": "$bullet_rev", "bulletformat": "1.8.0", "backend": "$backend"},
     "hardware": {"gpu": "$gpu", "nvidia_driver": "$driver", "cuda": "$cuda"},
     "losses": {"first": losses[0] if losses else None, "last": losses[-1] if losses else None, "points": len(losses)},
     "validation": json.load(open(f"{scratch}/out/validation.json")),

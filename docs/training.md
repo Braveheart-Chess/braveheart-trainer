@@ -160,20 +160,38 @@ gh workflow run Train --ref main -f net-id=net2 -f wdl=0.5 -f superbatches=40 -f
 
 - `wdl` also takes a list (`0.25,0.5,0.75`): one net per λ, one at a time,
   since the account's G and VT quota fits one GPU instance.
+- **Where the data lives:** the positions are read from braveheart-selfplay's
+  `s3://jwall-engineering-braveheart-selfplay-positions/data/selfplay/`, which
+  grants this project's GPU tasks read access (`readers`), and the nets are
+  written to this project's `s3://jwall-engineering-braveheart-trainer-nets/data/nets/`.
+  Both were copied key for key from `jwall-engineering-braveheart-nnue` at the
+  split, so a path recorded before it is the same key in the new bucket.
 - Each net's id is `<net-id>-l<λ×100>-r<run id>`, for example
-  `net1-l050-r41234567890`. The GPU role can write `data/nets/` but not list
-  it, so the run id is what keeps ids unique.
+  `net1-l050-r41234567890`. The run id is what keeps ids unique. Both buckets
+  are versioned, so an overwritten object could still be recovered.
 - The run summary lists each net with its records, losses and engine check.
 - **Run `GPU smoke` first** after any change to the profile, the image or the
   trainer's build. It checks the GPU, CUDA, bullet's CUDA build of the
-  trainer, and the dataset grants in both directions, in a few minutes.
+  trainer, and the dataset grants in both directions, in a few minutes: the
+  positions can be listed and read but not written or deleted, and the nets
+  can be written but not listed beyond the grant or deleted.
 
 1. It downloads the positions and manifests (not the game records).
 2. It prepares, trains, and runs the check.
 3. It writes `training.json` (schema `rusty-chess-net/2`; `/1`, net 1's,
    had a single `dataset`): the datasets, the split and its seeds, the
-   schedule, the engine commit, the bullet commit and bulletformat version,
-   the GPU, driver and CUDA version, the losses, and the check.
+   schedule, the commits, the bullet commit and bulletformat version, the GPU,
+   driver and CUDA version, the losses, and the check. `versions` names the
+   commits:
+   - `trainer_commit`: this repository's commit, which trained the net. Rebuild
+     there to reproduce it.
+   - `engine_commit` and `engine_version`: the engine release this repository
+     pins in `Cargo.lock`, whose `nnue-eval` checked the net and whose
+     `nnue.rs` says which shapes it reads.
+
+   A net trained in the engine repository (before the split) has no
+   `trainer_commit` or `engine_version`, and its `engine_commit` is the engine
+   repository's commit that held the trainer too.
 4. It uploads `net.nnue`, `training.json`, `eval_check.json`,
    `val_losses.txt`, `split.json`, `losses.txt` and `train.log` to
    `data/nets/<net id>/`.
