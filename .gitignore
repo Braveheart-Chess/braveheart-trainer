@@ -1,0 +1,5 @@
+/target/
+trainer/target/
+node_modules/
+__pycache__/
+.jwall-engineering-sites/
