@@ -15,7 +15,7 @@ import { dirname, join, normalize, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { BLOCKS, applyBlocks, blocksFor, relativeLinks } from "./gallery.mjs";
-import { embeddedNetFiles, engineNets, headingSlug, headingSlugs, summaryNetIds } from "./ledger.mjs";
+import { embeddedNetFiles, engineNets, headingSlug, headingSlugs, pinnedEngineCommit, summaryNetIds } from "./ledger.mjs";
 import { ManifestError, loadManifests } from "./manifest.mjs";
 import { REPO_ROOT, Renderer } from "./render.mjs";
 import { d2Source } from "./template.mjs";
@@ -25,8 +25,11 @@ export const PATHS = {
   manifests: "docs/nnue-architectures/manifests",
   diagrams: "docs/nnue-architectures/diagrams",
   ledger: "docs/nets.md",
-  nnueRs: "crates/search/src/nnue.rs",
-  netFiles: "crates/search/nets",
+  // The engine checkout `npm run engine:fetch` makes, at the commit Cargo.lock
+  // pins, and the files in it that list and hold the engine's nets.
+  engine: ".engine",
+  nnueRs: ".engine/crates/search/src/nnue.rs",
+  netFiles: ".engine/crates/search/nets",
 };
 
 function parseArgs(argv) {
@@ -71,6 +74,16 @@ export function crossChecks(root, manifests, generated) {
   const slugs = headingSlugs(ledger);
   for (const m of manifests) {
     if (!slugs.has(headingSlug(m.ledger_anchor))) problems.push(`${m.file}: ledger_anchor "${m.ledger_anchor}" matches no heading in ${PATHS.ledger}`);
+  }
+
+  // The engine checkout is the release Cargo.lock pins; nothing below is
+  // checked against any other.
+  const pinned = pinnedEngineCommit(readFileSync(join(root, "Cargo.lock"), "utf8"));
+  const commitFile = join(root, PATHS.engine, ".commit");
+  const have = existsSync(commitFile) ? readFileSync(commitFile, "utf8").trim() : null;
+  if (have !== pinned) {
+    problems.push(`${PATHS.engine}: ${have === null ? "missing" : `engine commit ${have}`}, but Cargo.lock pins ${pinned}; run \`npm run engine:fetch\``);
+    return problems;
   }
 
   // The engine's embedded and retired nets agree with the statuses.

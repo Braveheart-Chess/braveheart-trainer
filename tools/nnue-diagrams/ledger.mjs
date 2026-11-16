@@ -47,6 +47,14 @@ function idsInBlock(source, constName) {
 }
 
 /** The engine's embedded (`NETS`) and retired (`RETIRED_NETS`) net ids. */
+/** The engine commit Cargo.lock pins: braveheart-search's git source. */
+export function pinnedEngineCommit(cargoLock) {
+  const block = cargoLock.split("[[package]]").find((b) => b.includes('\nname = "braveheart-search"\n'));
+  const m = block && block.match(/^source = "git\+[^"#]+#([0-9a-f]{40})"$/m);
+  if (!m) throw new Error("Cargo.lock has no braveheart-search from git");
+  return m[1];
+}
+
 export function engineNets(nnueRs) {
   return { embedded: idsInBlock(nnueRs, "NETS"), retired: idsInBlock(nnueRs, "RETIRED_NETS") };
 }
