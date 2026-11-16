@@ -19,12 +19,12 @@ This repository trains Braveheart's NNUE nets and keeps their record: `trainer/`
 - **The trainer's settings are part of every net's provenance.** The architecture, schedule, quantization, file format and the bullet commit in `trainer/Cargo.toml` are recorded in each net's `training.json`. A change to any of them is a `feat` (or a `fix`) that says which net first uses it. A `perf` or `refactor` PR changes none of them.
 - **Every experiment updates `docs/`.** Training, a net's SPRT and rating, and one-off measurements all get recorded, including smoke tests and failed, cancelled, interrupted and dropped runs. See [Experiments and the research record](#experiments-and-the-research-record).
 
-## Until the data move
+## Until the cutover
 
-The positions and the nets still live in `s3://jwall-engineering-braveheart-nnue`, owned by the engine's project, and Train and GPU smoke still run from [Braveheart-Chess/braveheart](https://github.com/Braveheart-Chess/braveheart).
+The nets are moving, key for key, from `s3://jwall-engineering-braveheart-nnue`, owned by the engine's project, to this project's `s3://jwall-engineering-braveheart-trainer-nets`, and the positions to braveheart-selfplay's bucket. The workflows and `ci/` scripts here are ported to this project, both buckets and the pinned engine. Nothing runs them until the engine gives its dataset up (the cutover).
 
-- **The engine's [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md) is the ledger until then.** The copy here is a snapshot from engine commit `1a25b13`; record nothing in it. It is refreshed from the engine's at the data move, together with the architecture snapshots.
-- **The workflows and `ci/` scripts here are not ported yet.** They came over with their history: they still build `-p braveheart-tools` and record the repository commit as `engine_commit`, which here would be the trainer's. They still run as the engine's project (`project: braveheart`), whose task launch role trusts only the engine repository, so they fail before launching anything. Don't run them; porting them is part of the data move.
+- **Don't run Train or GPU smoke here before the cutover.** Until then the engine's bucket is the data's home and the new ones copies being made, so a net trained in either place would be missing from the other.
+- **The engine's [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md) is the ledger until the copy.** The copy here is a snapshot from engine commit `1a25b13`; record nothing in it. It is refreshed from the engine's when the data is copied, together with the architecture snapshots, and from then on this one is the ledger.
 
 ## Experiments and the research record
 
