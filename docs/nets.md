@@ -1,11 +1,13 @@
 # NNUE nets
 
-> **A snapshot until the data move.** Train still runs from the engine
-> repository, and its
+> **The ledger since the data move.** The nets were copied, key for key, to
+> this repository's bucket on 2026-11-16 and audited ([audit log](#audit-log));
+> from then on this page is the ledger, and every net is recorded here. It was
+> refreshed from the engine's
 > [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md)
-> is the ledger until the nets move to this repository's bucket. This copy is
-> engine commit `1a25b13`; record nothing here. It is refreshed from the
-> engine's at the data move.
+> at the move, which, like the architecture snapshots, had not changed since
+> this copy was taken at engine commit `1a25b13`. Train and GPU smoke run from
+> neither repository until the cutover ([AGENTS.md](../AGENTS.md#until-the-cutover)).
 
 The ledger of every net trained, kept or not: what it was trained on and
 how, what it measured, and how it played. It's the record for deciding what
@@ -14,7 +16,10 @@ names are in [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfpl
 [nnue.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md); the training pipeline in [training.md](training.md).
 
 Each net's own record (`training.json`, the losses, the validation curve, the
-split, the log) is in `s3://jwall-engineering-braveheart-nnue/data/nets/<net id>/`.
+split, the log) is in `s3://jwall-engineering-braveheart-trainer-nets/data/nets/<net id>/`.
+Records made before 2026-11-16 name the same key in
+`s3://jwall-engineering-braveheart-nnue` or, before 2026-11-15,
+`s3://jwall-engineering-rusty-chess-nnue`.
 Net ids are `<name>-l<λ×100>-r<Train run id>`. Each net's architecture is
 drawn in [nnue-architectures/](nnue-architectures/README.md), one snapshot
 per net id; the CI check there requires every net in the summary below to
@@ -1444,3 +1449,33 @@ from it on 2026-11-13 and not re-read).
 net8x160's summary row and section from the release notes (`Rating` run
 [43481823225](https://github.com/jwallace145/rusty-chess-v2/actions/runs/43481823225)).
 This closes the item left unchecked above.
+
+**2026-11-16,** the nets' move to this project's bucket. When the Braveheart
+project split, the owner copied `data/nets/`, key for key, from
+`s3://jwall-engineering-braveheart-nnue` to
+`s3://jwall-engineering-braveheart-trainer-nets` inside S3, with `aws s3 sync`
+and admin credentials; the positions went to braveheart-selfplay's bucket the
+same way
+([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#the-bucket-move)).
+A path this page records under either earlier bucket is the same key in the new
+one. The old bucket was not changed and is kept until the owner deletes it.
+Audited read-only with braveheart-selfplay's `ci/bucket-copy-audit.sh --prefix`
+(at its `2cf7af5`) and `AWS_PROFILE=jwall-admin` (the owner's Identity Center
+admin role), from 14:51 to 14:55 UTC:
+
+```sh
+ci/bucket-copy-audit.sh --prefix data/nets/ jwall-engineering-braveheart-nnue jwall-engineering-braveheart-trainer-nets <dir>
+```
+
+| Check | Result |
+|:--|:--|
+| Objects and bytes under `data/nets/` in each bucket, from `list-objects-v2` | 136 objects and 48,432,535 bytes in both: 132 under the 19 net directories (48,432,423 bytes) and four 28-byte GPU smoke markers, `smoke-20261030T073317Z`, `smoke-20261030T074220Z`, `smoke-20261030T225214Z` and `smoke-20261115T212604Z` |
+| Every source key is in the destination with the same size and ETag | All 136; none missing, none of another size |
+| Keys only in the destination | None |
+| What an equal ETag means here | No ETag in either listing is a multipart one, the largest object is 4,744,768 bytes (`net7rl012w768-l050-r42411319602/net.nnue`), and both buckets use SSE-S3 (`AES256`), so every ETag is the MD5 of the object's bytes |
+| `head-object` on 2 `net.nnue` in both buckets, the largest and one chosen at random (`net3-l050-r41160495666`): length, ETag, content type, encryption, metadata | Identical for both. Neither carries user metadata |
+| `net.nnue` of the 6 retired nets, downloaded from the new bucket, against the SHA-256 in the engine's `crates/search/src/nnue.rs` | All 6 match: `net1-l050-r41022503872`, `net2x80-l050-r41131366975`, `net4w512-l050-r41170687764`, `net5-l050-r41229287546`, `net6k4-l050-r41282883885`, `net7rl012-l050-r42054816508` |
+
+**Not checked:** no other object was read back and hashed; the rest rests on
+the ETags. The copy's exact invocation, output and times were not recorded.
+The listings compare current versions only. Storage class was not compared.
