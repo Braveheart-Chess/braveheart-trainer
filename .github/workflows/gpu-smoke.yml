@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   smoke:
-    uses: jwallace145/jwall-engineering-infra/.github/workflows/remote-task.yml@v0.36.0
+    uses: jwallace145/jaws/.github/workflows/remote-task.yml@v0.36.0
     with:
       project: braveheart-trainer
       profile: gpu
