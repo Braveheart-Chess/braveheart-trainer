@@ -135,7 +135,7 @@ shards in S3 ──▶ prepare ──▶ train.data, val.data ──▶ train �
 ## Running it
 
 **On a GPU task:** the `Train` workflow runs `ci/train-task.sh` on
-jwall-engineering-infra's `gpu` profile (one on-demand `g6.xlarge`, an NVIDIA
+jaws's `gpu` profile (one on-demand `g6.xlarge`, an NVIDIA
 L4) from `main`:
 
 ```sh
@@ -242,7 +242,7 @@ the task is fine. GitHub's view of a remote task's stream can lag.
 
 **Fix: scratch on the instance's local NVMe SSD.** It's 250 GB on a
 `g6.xlarge`, gigabytes a second, at no extra cost. That's a change to
-jwall-engineering-infra's task setup: mount the instance store and put
+jaws's task setup: mount the instance store and put
 `SCRATCH_DIR` there for the `gpu` profile. It's proposed there, not worked
 around here.
 

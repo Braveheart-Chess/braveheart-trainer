@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The GPU profile's acceptance test, run by the `GPU smoke` workflow on one
-# fresh g6.xlarge (jwall-engineering-infra's remote-task, profile gpu): the
+# fresh g6.xlarge (jaws's remote-task, profile gpu): the
 # GPU and CUDA work, bullet's CUDA backend builds our trainer, and the
 # dataset grants hold in both directions: the positions (braveheart-selfplay's
 # bucket) can be read and not written or deleted, and the nets (this

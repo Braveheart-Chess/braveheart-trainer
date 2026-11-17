@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Train one NNUE net on a GPU instance, run by the Train workflow through
-# jwall-engineering-infra's remote-task workflow (GPU profile). It starts in
+# jaws's remote-task workflow (GPU profile). It starts in
 # the repository root at the workflow's commit, with OUT_DIR set (and
 # SCRATCH_DIR for the large files, /tmp if unset). docs/training.md describes
 # the steps and the outputs.
