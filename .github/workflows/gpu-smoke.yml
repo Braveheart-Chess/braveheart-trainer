@@ -1,6 +1,6 @@
 name: GPU smoke
 
-# The acceptance test of jwall-engineering-infra's GPU task profile
+# The acceptance test of jaws's GPU task profile
 # (RUSTY_CHESS_GPU_HANDOFF.md, docs/remote-tasks.md there): one fresh,
 # on-demand g6.xlarge runs ci/gpu-smoke.sh, which prints the GPU and CUDA
 # versions, compiles and runs a CUDA kernel, builds the trainer with bullet's
@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   smoke:
-    uses: jwallace145/jaws/.github/workflows/remote-task.yml@v0.36.0
+    uses: jwallace145/jaws/.github/workflows/remote-task.yml@v0.50.1
     with:
       project: braveheart-trainer
       profile: gpu
