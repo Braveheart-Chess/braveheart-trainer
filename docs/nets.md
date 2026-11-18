@@ -6,8 +6,11 @@
 > refreshed from the engine's
 > [docs/nets.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nets.md)
 > at the move, which, like the architecture snapshots, had not changed since
-> this copy was taken at engine commit `1a25b13`. Train and GPU smoke run from
-> neither repository until the cutover ([AGENTS.md](../AGENTS.md#until-the-cutover)).
+> this copy was taken at engine commit `1a25b13`. Train and GPU smoke ran from
+> neither repository from the copy until the cutover
+> ([AGENTS.md](../AGENTS.md#until-the-cutover)), when the engine gave its dataset
+> up (engine #277, merged 2026-11-18). The first run from this repository is
+> that day's GPU smoke test ([audit log](#audit-log), 2026-11-18).
 
 The ledger of every net trained, kept or not: what it was trained on and
 how, what it measured, and how it played. It's the record for deciding what
@@ -1479,3 +1482,34 @@ ci/bucket-copy-audit.sh --prefix data/nets/ jwall-engineering-braveheart-nnue jw
 **Not checked:** no other object was read back and hashed; the rest rests on
 the ETags. The copy's exact invocation, output and times were not recorded.
 The listings compare current versions only. Storage class was not compared.
+
+**2026-11-18,** the first `GPU smoke` from this repository, a proving run after
+the cutover, dispatched from `main` at `9759c08`. Taken from the run's job log
+and its `gpu-smoke` artifact (`summary.txt`, `nvidia-smi.txt`,
+`trainer-build.log`):
+
+| Run | Instance | Result |
+|:--|:--|:--|
+| `GPU smoke` [44254765784](https://github.com/Braveheart-Chess/braveheart-trainer/actions/runs/44254765784) | on-demand `g6.xlarge` `i-05021823e2d79e512`, us-east-1a, image `ami-0f964da32f9793d2b`; NVIDIA L4 (23,034 MiB), driver 595.112.07, CUDA 13.2 (`nvcc` V13.2.51); AMD EPYC 7R13, 2 physical cores; scratch on the 233 GB instance-store NVMe (`nvme1n1`) | 10 checks passed, 0 failed: a CUDA kernel compiles and runs; the trainer builds with bullet's CUDA backend (`da426a4`) in 32 s; braveheart-selfplay's positions can be listed and read (a manifest of generation 0's run `20261030-41007876197-1`, task t1) but not written or deleted; `data/nets/` can be written but not deleted, and this bucket can't be listed outside the grant |
+
+- **Timings:** the instance launched at 06:54:23 UTC, the task's checks ran
+  from 06:55:59 to 06:56:50, and the task runner terminated the instance at
+  06:56:57. The workflow took 2 minutes 55 seconds.
+- **Against the last smoke test,** run from the engine on 2026-11-15
+  (`smoke-20261115T212604Z`, recorded in braveheart-selfplay's
+  [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#the-bucket-move)):
+  the same instance type, zone, GPU, driver, CUDA version and trainer build time.
+  10 checks rather than 8, because the port (#6) checks the grants across this
+  project's bucket and braveheart-selfplay's and adds a denied delete on each.
+  This is the first run of that version.
+- **The marker:** it wrote `data/nets/smoke-20261118T065553Z/hello.txt` (28
+  bytes, 06:56:47 UTC). A read-only listing afterwards with
+  `AWS_PROFILE=jwall-admin` gives 137 objects and 48,432,563 bytes under
+  `data/nets/`: the 2026-11-16 audit's 136 objects and 48,432,535 bytes, plus
+  this marker, the fifth.
+
+**Cost:** about $0.03, an estimate from the instance's 2 minutes 34 seconds at
+the on-demand $0.8048 an hour, not a billed figure.
+
+**Not checked:** `Train`, which hasn't run from this repository yet; the billed
+cost.
