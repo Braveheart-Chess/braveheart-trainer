@@ -1513,3 +1513,45 @@ the on-demand $0.8048 an hour, not a billed figure.
 
 **Not checked:** `Train`, which hasn't run from this repository yet; the billed
 cost.
+
+**2026-11-19,** the nets' copy to the production account. jaws is moving this
+project there with its dataset, so the owner's production admin role copied
+`data/`, key for key, from `s3://jwall-engineering-braveheart-trainer-nets` to
+`s3://jaws-braveheart-trainer-nets`, versioned like this bucket, inside S3 with
+`aws s3 sync` (AWS CLI 2.34.59), at 01:26 UTC. That role reads this bucket
+through the bucket policy, which grants it read and list only. The positions
+were copied the same way
+([datasets.md](https://github.com/Braveheart-Chess/braveheart-selfplay/blob/main/docs/datasets.md#the-bucket-move)).
+**The workflows have not moved:** `Train` and `GPU smoke` still write to
+`s3://jwall-engineering-braveheart-trainer-nets`, the bucket this page names,
+until the cutover. A final `sync` and a full re-audit come then. This bucket was
+not changed and is kept.
+
+Audited read-only with braveheart-selfplay's `ci/bucket-copy-audit.sh` and
+`ci/bucket-copy-sample.py --all` (its #22), the production admin role for both
+buckets' objects and `AWS_PROFILE=jwall-admin` for this bucket's version
+history, against a baseline listing of this bucket taken on 2026-11-18 at 23:30
+UTC:
+
+```sh
+ci/bucket-copy-audit.sh --prefix data/ jwall-engineering-braveheart-trainer-nets jaws-braveheart-trainer-nets <dir>
+ci/bucket-copy-sample.py --all --prefix data/ jwall-engineering-braveheart-trainer-nets jaws-braveheart-trainer-nets <dir>
+```
+
+| Check | Result |
+|:--|:--|
+| Objects and bytes under `data/` in each bucket, from `list-objects-v2` | 137 objects and 48,432,563 bytes in both, and in the baseline: the listing after the 2026-11-18 smoke test |
+| Every source key is in the destination with the same size and ETag | All 137; none missing, none of another size |
+| Keys only in the destination | None |
+| What an equal ETag means here | No ETag in either listing is a multipart one, the largest object is 4,744,768 bytes, and both buckets use SSE-S3 (`AES256`), so every ETag is the MD5 of the object's bytes |
+| Versions in the destination | 137, one for each object; no delete markers |
+| SHA-256 of **every** object, downloaded from both buckets | All 137 identical, 48,432,563 bytes from each bucket, in all 24 directories |
+| Each `net.nnue`, downloaded from the destination, against the `net_sha256` in its own `training.json` there | All 19 match |
+| `net.nnue` of the 6 retired nets, from the destination, against the SHA-256 in the engine's `crates/search/src/nnue.rs` | All 6 match, the same 6 as on 2026-11-16 |
+| This bucket against the baseline, after the copy | The same 137 keys, each with the same size, ETag and last-modified time; no noncurrent versions or delete markers before or after; versioning and encryption unchanged |
+
+**Not checked:** `nnue-eval` was not run on a net from the new bucket. An
+object's last-modified time there is the copy's. No task has run in the
+production account, so its GPU role's grants on the new bucket are unexercised.
+The copy's script and the audit's wrapper are local scripts that aren't in a
+repository.
