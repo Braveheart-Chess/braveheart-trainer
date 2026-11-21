@@ -13,8 +13,8 @@ set -euo pipefail
 : "${OUT_DIR:?OUT_DIR is not set}"
 scratch="${SCRATCH_DIR:-/tmp}/gpu-smoke"
 mkdir -p "$scratch"
-positions=s3://jwall-engineering-braveheart-selfplay-positions
-nets=s3://jwall-engineering-braveheart-trainer-nets
+positions=s3://jaws-braveheart-selfplay-positions
+nets=s3://jaws-braveheart-trainer-nets
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 summary="$OUT_DIR/summary.txt"
 : > "$summary"

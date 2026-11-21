@@ -81,7 +81,7 @@ jobs:
           BUCKETS: ${{ inputs.output-buckets }}
           KINGS: ${{ inputs.king-buckets }}
           RUN_ID: ${{ github.run_id }}
-          POSITIONS_BUCKET: jwall-engineering-braveheart-selfplay-positions
+          POSITIONS_BUCKET: jaws-braveheart-selfplay-positions
         run: |
           [[ "$NET_ID" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "::error::net-id must be lower-case letters, digits and '-'"; exit 1; }
           [[ "$SUPERBATCHES" =~ ^[0-9]+$ ]] && [ "$SUPERBATCHES" -ge 1 ] && [ "$SUPERBATCHES" -le 200 ] || { echo "::error::superbatches must be 1..200"; exit 1; }
@@ -129,7 +129,7 @@ jobs:
       max-parallel: 1 # the G and VT on-demand quota (5 vCPUs) fits one g6.xlarge
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.nets) }}
-    uses: Jaws-Platform/jaws/.github/workflows/remote-task.yml@v0.59.0
+    uses: Jaws-Platform/jaws/.github/workflows/remote-task.yml@v0.68.1
     with:
       project: braveheart-trainer
       profile: gpu

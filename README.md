@@ -40,6 +40,12 @@ project, to this project's `s3://jwall-engineering-braveheart-trainer-nets` on
 - The Train and GPU smoke workflows are ported to this project and both
   buckets, and wait for the cutover ([AGENTS.md](AGENTS.md#until-the-cutover)).
 
+**Since 2026-11-21** the nets and the positions are in the production
+account: `s3://jaws-braveheart-trainer-nets` and braveheart-selfplay's
+`s3://jaws-braveheart-selfplay-positions`, where the workflows read and write
+(sign in with the `jaws-prod` profile). The management account's buckets are
+kept, unchanged since the copy ([docs/nets.md](docs/nets.md#audit-log)).
+
 ## Building
 
 Two Cargo workspaces, so bullet's GPU backends never reach nnue-eval's build:
