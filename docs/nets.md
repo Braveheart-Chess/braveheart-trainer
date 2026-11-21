@@ -19,8 +19,9 @@ names are in [datasets.md](https://github.com/Braveheart-Chess/braveheart-selfpl
 [nnue.md](https://github.com/Braveheart-Chess/braveheart/blob/main/docs/nnue.md); the training pipeline in [training.md](training.md).
 
 Each net's own record (`training.json`, the losses, the validation curve, the
-split, the log) is in `s3://jwall-engineering-braveheart-trainer-nets/data/nets/<net id>/`.
-Records made before 2026-11-16 name the same key in
+split, the log) is in `s3://jaws-braveheart-trainer-nets/data/nets/<net id>/`, in the
+production account. Records made before 2026-11-21 name the same key in
+`s3://jwall-engineering-braveheart-trainer-nets`, before 2026-11-16 in
 `s3://jwall-engineering-braveheart-nnue` or, before 2026-11-15,
 `s3://jwall-engineering-rusty-chess-nnue`.
 Net ids are `<name>-l<λ×100>-r<Train run id>`. Each net's architecture is
@@ -1555,3 +1556,36 @@ object's last-modified time there is the copy's. No task has run in the
 production account, so its GPU role's grants on the new bucket are unexercised.
 The copy's script and the audit's wrapper are local scripts that aren't in a
 repository.
+
+**2026-11-21,** the cutover to the production account. Production's Running
+On-Demand G and VT quota (`L-DB2E81BA`) was approved: `aws service-quotas
+get-service-quota --profile jaws-prod --service-code ec2 --quota-code
+L-DB2E81BA` returns 5.0, the same as the management account, so one
+`g6.xlarge` (4 vCPUs) fits at a time and a `g6.2xlarge` (8) does not. This
+pull request moves `Train` and `GPU smoke` to jaws `v0.68.1`, which resolves
+this project to the production account, and points them at
+`s3://jaws-braveheart-trainer-nets` and braveheart-selfplay's
+`s3://jaws-braveheart-selfplay-positions`. The management account's
+`s3://jwall-engineering-braveheart-trainer-nets` is kept and no longer written.
+
+No final `sync` was needed. A re-audit just before the cutover, read-only as
+the production admin role (`jaws-prod`), with braveheart-selfplay's
+`ci/bucket-copy-audit.sh` at its `main`:
+
+```sh
+ci/bucket-copy-audit.sh --prefix data/ jwall-engineering-braveheart-trainer-nets jaws-braveheart-trainer-nets <dir>
+```
+
+| Check | Result |
+|:--|:--|
+| Objects and bytes under `data/` in each bucket | 137 objects and 48,432,563 bytes in both: the 2026-11-19 audit's counts |
+| Every source key in the destination with the same size and ETag | All 137; none missing, none of another size, no checksum fallback needed |
+| Keys only in the destination | None |
+| Writers | No `Train` or `GPU smoke` run since the 2026-11-18 smoke test (`gh run list`) |
+
+**Not checked:** the old bucket's version history: `ListObjectVersions` is
+denied to the production admin role, whose grant on that bucket is read and
+list only. The full SHA-256 comparison of 2026-11-19 was not repeated, because
+every key, size and ETag is unchanged since. The production GPU role's grants
+on both buckets are exercised by the first `GPU smoke` after the merge, which
+is recorded here.

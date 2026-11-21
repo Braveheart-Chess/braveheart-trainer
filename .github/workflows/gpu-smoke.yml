@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   smoke:
-    uses: Jaws-Platform/jaws/.github/workflows/remote-task.yml@v0.59.0
+    uses: Jaws-Platform/jaws/.github/workflows/remote-task.yml@v0.68.1
     with:
       project: braveheart-trainer
       profile: gpu

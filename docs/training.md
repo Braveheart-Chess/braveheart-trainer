@@ -160,12 +160,15 @@ gh workflow run Train --ref main -f net-id=net2 -f wdl=0.5 -f superbatches=40 -f
 
 - `wdl` also takes a list (`0.25,0.5,0.75`): one net per λ, one at a time,
   since the account's G and VT quota fits one GPU instance.
-- **Where the data lives:** the positions are read from braveheart-selfplay's
-  `s3://jwall-engineering-braveheart-selfplay-positions/data/selfplay/`, which
-  grants this project's GPU tasks read access (`readers`), and the nets are
-  written to this project's `s3://jwall-engineering-braveheart-trainer-nets/data/nets/`.
-  Both were copied key for key from `jwall-engineering-braveheart-nnue` at the
-  split, so a path recorded before it is the same key in the new bucket.
+- **Where the data lives:** in the production account since 2026-11-21. The
+  positions are read from braveheart-selfplay's
+  `s3://jaws-braveheart-selfplay-positions/data/selfplay/`, which grants this
+  project's GPU tasks read access (`readers`), and the nets are written to this
+  project's `s3://jaws-braveheart-trainer-nets/data/nets/`. Both were copied key
+  for key from the management account's `jwall-engineering-braveheart-*`
+  buckets, which were copied the same way from `jwall-engineering-braveheart-nnue`
+  at the split, so a path recorded before either move is the same key in the
+  current bucket.
 - Each net's id is `<net-id>-l<λ×100>-r<run id>`, for example
   `net1-l050-r41234567890`. The run id is what keeps ids unique. Both buckets
   are versioned, so an overwritten object could still be recovered.
@@ -220,7 +223,7 @@ the task is fine. GitHub's view of a remote task's stream can lag.
 
 **Diagnose:**
 1. **Read the task's own log.** It's the CloudWatch log group
-   `/jwall-engineering/rusty-chess/tasks`, stream
+   `/jaws/braveheart-trainer/tasks` (in the production account), stream
    `<command id>/<instance id>/aws-runShellScript/stdout`. bullet prints
    `pos/sec` every second.
 2. **Compare with the disk.** Read the root volume's `VolumeReadBytes` in

@@ -52,7 +52,9 @@ components:
   # https://github.com/Jaws-Platform/jaws/blob/main/docs/datasets.md
   - kind: dataset
     name: nets
-    bucket: jwall-engineering-braveheart-trainer-nets  # <Organization>-<project>-<name>
+    # In the production account since 2026-11-21 (docs/nets.md, audit log); the
+    # management account's jwall-engineering-braveheart-trainer-nets is kept.
+    bucket: jaws-braveheart-trainer-nets  # <Organization>-<project>-<name>
     prefix: data/
     versioning: true
     readers:
