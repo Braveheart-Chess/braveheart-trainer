@@ -1589,3 +1589,30 @@ list only. The full SHA-256 comparison of 2026-11-19 was not repeated, because
 every key, size and ETag is unchanged since. The production GPU role's grants
 on both buckets are exercised by the first `GPU smoke` after the merge, which
 is recorded here.
+
+**2026-11-21,** the first `GPU smoke` in the production account, right after
+the cutover (#18): run
+[44859263355](https://github.com/Braveheart-Chess/braveheart-trainer/actions/runs/44859263355),
+from `main` at the cutover's merge, jaws `remote-task.yml@v0.68.1`.
+
+- **Where:** as `jaws-braveheart-trainer-ci-task` in account 570327089884, on
+  instance `i-0894202882cbf0b69`, a `g6.xlarge` on demand in us-east-1a, image
+  `ami-0f964da32f9793d2b` (the pinned `deep-learning-gpu`), scratch on the
+  instance store. It launched at 03:05:24 UTC and was terminated at 03:07:48.
+  This was the first GPU instance under production's G and VT quota.
+- **GPU:** driver 595.112.07, CUDA 13.2 (`nvcc` V13.2.51).
+- **Result:** 10 passed, 0 failed (`summary.txt` in the run's `gpu-smoke`
+  artifact). A CUDA kernel compiles and runs, and `cargo build` of the trainer
+  with `--features cuda` succeeds (32 s). On `s3://jaws-braveheart-selfplay-positions`,
+  listing and reading a shard's manifest are allowed, and writing and deleting
+  are denied. On `s3://jaws-braveheart-trainer-nets`, writing under
+  `data/nets/` is allowed, and listing outside the grant and deleting are denied.
+- **The marker:** it wrote `data/nets/smoke-20261121T030652Z/hello.txt` (28
+  bytes). A read-only listing afterwards as `jaws-prod` gives 138 objects and
+  48,432,591 bytes under `data/nets/`: the cutover audit's 137 objects and
+  48,432,563 bytes, plus this marker, the sixth.
+
+**Cost:** about $0.03, an estimate from the instance's 2 minutes 24 seconds at
+the on-demand $0.8048 an hour, not a billed figure.
+
+**Not checked:** `Train` in production; the billed cost.
