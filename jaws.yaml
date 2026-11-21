@@ -12,7 +12,7 @@ repository: Braveheart-Chess/braveheart-trainer
 # The tags every resource carries (through the provider's default_tags).
 # Project, Repository and Environment=prod are cross-checked.
 tags:
-  Organization: jwall-engineering
+  Organization: jaws
   Project: braveheart-trainer
   Environment: prod
   Repository: Braveheart-Chess/braveheart-trainer
