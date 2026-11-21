@@ -43,8 +43,9 @@ project, to this project's `s3://jwall-engineering-braveheart-trainer-nets` on
 **Since 2026-11-21** the nets and the positions are in the production
 account: `s3://jaws-braveheart-trainer-nets` and braveheart-selfplay's
 `s3://jaws-braveheart-selfplay-positions`, where the workflows read and write
-(sign in with the `jaws-prod` profile). The management account's buckets are
-kept, unchanged since the copy ([docs/nets.md](docs/nets.md#audit-log)).
+(sign in with the `jaws-prod` profile). The management account's copies were
+deleted on 2026-11-21, after a byte-for-byte check against these
+([docs/nets.md](docs/nets.md#audit-log)).
 
 ## Building
 

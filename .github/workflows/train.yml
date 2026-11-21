@@ -129,7 +129,7 @@ jobs:
       max-parallel: 1 # the G and VT on-demand quota (5 vCPUs) fits one g6.xlarge
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.nets) }}
-    uses: Jaws-Platform/jaws/.github/workflows/remote-task.yml@v0.68.1
+    uses: Jaws-Platform/jaws/.github/workflows/remote-task.yml@v0.73.0
     with:
       project: braveheart-trainer
       profile: gpu
