@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/Braveheart-Chess/braveheart-trainer/compare/v0.3.0...v0.3.1) (2026-11-22)
+
+
+### Bug Fixes
+
+* **repo:** let dependabot's capitalised bump titles pass ([#27](https://github.com/Braveheart-Chess/braveheart-trainer/issues/27)) ([61d371b](https://github.com/Braveheart-Chess/braveheart-trainer/commit/61d371b0dfb069f13ead72b7a7f009e47ce5d5be))
+
 ## [0.3.0](https://github.com/Braveheart-Chess/braveheart-trainer/compare/v0.2.1...v0.3.0) (2026-11-21)
 
 
