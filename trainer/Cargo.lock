@@ -52,13 +52,13 @@ dependencies = [
 
 [[package]]
 name = "braveheart-core"
-version = "0.54.0"
-source = "git+https://github.com/Braveheart-Chess/braveheart?tag=v0.54.0#3fd0223c949d28dc391f86e1790bffde28ff04e3"
+version = "0.55.0"
+source = "git+https://github.com/Braveheart-Chess/braveheart?tag=v0.55.0#176fc5e44c4a8f8e4d27b365eb6a05bdafd00beb"
 
 [[package]]
 name = "braveheart-search"
-version = "0.54.0"
-source = "git+https://github.com/Braveheart-Chess/braveheart?tag=v0.54.0#3fd0223c949d28dc391f86e1790bffde28ff04e3"
+version = "0.55.0"
+source = "git+https://github.com/Braveheart-Chess/braveheart?tag=v0.55.0#176fc5e44c4a8f8e4d27b365eb6a05bdafd00beb"
 dependencies = [
  "braveheart-core",
  "serde",

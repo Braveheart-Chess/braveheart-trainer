@@ -28,7 +28,7 @@ sha2 = "0.11"
 [dev-dependencies]
 # The engine release nnue-eval checks nets against (the root Cargo.toml pins the
 # same tag): the tests compare the trainer's king bucket layout with its.
-braveheart-search = { git = "https://github.com/Braveheart-Chess/braveheart", tag = "v0.54.0" }
+braveheart-search = { git = "https://github.com/Braveheart-Chess/braveheart", tag = "v0.55.0" }
 
 [profile.release]
 opt-level = 3
