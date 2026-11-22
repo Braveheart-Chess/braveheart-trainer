@@ -10,9 +10,9 @@ project: braveheart-trainer
 repository: Braveheart-Chess/braveheart-trainer
 
 # The tags every resource carries (through the provider's default_tags).
-# Project, Repository and Environment=prod are cross-checked.
+# Project, Repository and Environment=prod are cross-checked; jaws adds
+# Organization (this repository's GitHub owner) and ManagedBy itself.
 tags:
-  Organization: jaws
   Project: braveheart-trainer
   Environment: prod
   Repository: Braveheart-Chess/braveheart-trainer
@@ -54,7 +54,7 @@ components:
     name: nets
     # In the production account since 2026-11-21 (docs/nets.md, audit log). The
     # management account's copy was deleted the same day.
-    bucket: jaws-braveheart-trainer-nets  # <Organization>-<project>-<name>
+    bucket: jaws-braveheart-trainer-nets  # <name_root>-<project>-<name>
     prefix: data/
     versioning: true
     readers:
