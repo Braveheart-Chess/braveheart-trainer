@@ -5,14 +5,13 @@ This repository trains Braveheart's NNUE nets and keeps their record: `trainer/`
 ## Rules
 
 - **Never push to `main`.** Every change goes through a pull request on a branch. There are no exceptions after the initial scaffold.
-- **Commits are a single line**: `type(scope)?: subject`, at most 100 characters. Allowed types: `feat`, `fix`, `docs`, `chore`, `refactor`, `ci`, `build`, `perf`, `style`, `test`, `revert`. The only thing allowed after the header is a blank line and `Co-authored-by: Name <email>` trailers. No body text. Put details in the PR description.
-- **Open PRs with a typed template** and fill in every section:
+- **Commits are a single line**: `type(scope): subject`, at most 100 characters, with a lowercase imperative subject and no trailing period. Types: `feat`, `fix`, `perf`, `revert`, `docs`, `refactor`, `test`, `build`, `ci`, `style`, `chore`; never invent another. Scope: exactly one of `SCOPES` in `commitlint.config.mjs` (the Scopes table in CONTRIBUTING.md); never invent one, and if none fits, ask. The only thing allowed after the header is a blank line and `Co-authored-by: Name <email>` trailers. No body text. Put details in the PR description.
+- **PR titles are valid commit headers**, scope included; squash merges use the title as the commit message.
+- **PR bodies use the template's sections, in order, every one filled in**; write "n/a" rather than deleting one:
 
   ```sh
-  gh pr create --template <feat|perf|fix|docs|chore|refactor|ci>.md
+  gh pr create --title "type(scope): subject" --body-file <file>
   ```
-
-  The PR title MUST be a valid Conventional Commit; squash merges use it as the commit message.
 - **Run the repo's checks locally before opening the PR** (see below).
 - **Never delete or overwrite a net or its record.** Every net trained, kept or not, keeps its `training.json`, losses, split and log, and its row in `docs/nets.md`. No workflow, script or command in this repository deletes from the dataset bucket.
 - **One engine, pinned.** `Cargo.toml` pins `braveheart-core` and `braveheart-search` to one engine release, and `trainer/Cargo.toml` pins the same tag for its tests; `crates/nnue-eval/tests/engine_pin.rs` checks the two locks agree. `crates/nnue-eval/tests/golden.rs` pins how that engine scores positions with its embedded net, with values from the engine's own `nnue-eval`. Moving the pin is its own PR: it updates the golden values and says which net is first checked against the new engine. Never update a golden value to make CI pass.
@@ -54,7 +53,7 @@ cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo clippy --manifest-path trainer/Cargo.toml --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 cargo test --manifest-path trainer/Cargo.toml --locked
-npm ci && npm run engine:fetch && npm run nnue:diagrams:check && npm test
+npm ci && npm run engine:fetch && npm run nnue:diagrams:check && npm test && npm run test:commitlint
 ```
 
 ## Things that need the owner

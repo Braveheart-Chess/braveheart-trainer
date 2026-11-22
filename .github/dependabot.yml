@@ -1,3 +1,5 @@
+# The prefix carries the scope, so Dependabot's titles are valid commit
+# headers (`chore(deps): bump ...`) and squash merge onto main unchanged.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -5,24 +7,24 @@ updates:
     schedule:
       interval: weekly
     commit-message:
-      prefix: ci
+      prefix: chore(deps)
   # nnue-eval's workspace.
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
     commit-message:
-      prefix: chore
+      prefix: chore(deps)
   # The trainer's own workspace and lock.
   - package-ecosystem: cargo
     directory: /trainer
     schedule:
       interval: weekly
     commit-message:
-      prefix: chore
+      prefix: chore(deps)
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     commit-message:
-      prefix: chore
+      prefix: chore(deps)
