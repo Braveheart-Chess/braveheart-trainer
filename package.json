@@ -10,7 +10,8 @@
     "nnue:diagrams": "node tools/nnue-diagrams/cli.mjs generate",
     "nnue:diagrams:check": "node tools/nnue-diagrams/cli.mjs check",
     "nnue:diagrams:list": "node tools/nnue-diagrams/cli.mjs list",
-    "test": "node --test \"tools/**/*.test.mjs\""
+    "test": "node --test \"tools/**/*.test.mjs\"",
+    "test:commitlint": "node --test \"tools/commitlint/*.test.mjs\" && bash scripts/test-commitlint.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
